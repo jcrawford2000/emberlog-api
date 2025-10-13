@@ -1,0 +1,6 @@
+{
+  "venvPath": "/home/justin/.cache/pypoetry/virtualenvs",
+  "venv": "emberlog-api-ry-D9Tr_-py3.12",
+  "include": ["app"],
+  "reportMissingImports": true
+}
