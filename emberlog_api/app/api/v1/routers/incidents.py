@@ -1,6 +1,7 @@
 import logging
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from psycopg_pool import AsyncConnectionPool
 
 from emberlog_api.app.api.v1.routers.sse import publish_incident
@@ -8,6 +9,7 @@ from emberlog_api.app.db.pool import get_pool
 from emberlog_api.app.db.repositories import incidents
 from emberlog_api.models.incident import (
     IncidentIn,
+    IncidentListOut,
     IncidentOut,
     Links,
     LinkTarget,
@@ -19,6 +21,36 @@ configure_logging()
 log = logging.getLogger("emberlog_api.v1.routers.incidents")
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
+
+
+@router.get("/", name="list_incidents", response_model=IncidentListOut)
+async def list_incidents(
+    *,
+    from_dispatched_at: datetime | None = Query(None),
+    to_dispatched_at: datetime | None = Query(None),
+    incident_type: str | None = Query(None),
+    channel: str | None = Query(None),
+    units: list[str] | None = Query(None),
+    address_search: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    pool: AsyncConnectionPool = Depends(get_pool),
+):
+    limit = page_size
+    offset = (page - 1) * page_size
+    items, total = await incidents.list_incidents(
+        pool=pool,
+        from_dispatched_at=from_dispatched_at,
+        to_dispatched_at=to_dispatched_at,
+        incident_type=incident_type,
+        channel=channel,
+        units=units,
+        address_search=address_search,
+        limit=limit,
+        offset=offset,
+    )
+
+    return IncidentListOut(items=items, total=total, page=page, page_size=page_size)
 
 
 @router.get("/{incident_id}", name="get_incident", response_model=IncidentOut)

@@ -45,3 +45,10 @@ class IncidentOut(BaseModel):
     transcript: Optional[str]
     parsed: Optional[dict] = None
     created_at: datetime
+
+
+class IncidentListOut(BaseModel):
+    items: List[IncidentOut]
+    total: int
+    page: int
+    page_size: int
