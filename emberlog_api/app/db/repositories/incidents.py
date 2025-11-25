@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Any
 
 from psycopg.types.json import Json
@@ -84,3 +85,88 @@ async def select_incident(pool, incident_id: int) -> IncidentOut:
                 parsed=row[10],
                 created_at=row[11],
             )
+
+
+async def list_incidents(
+    pool,
+    *,
+    from_dispatched_at: datetime | None,
+    to_dispatched_at: datetime | None,
+    incident_type: str | None,
+    channel: str | None,
+    units: list[str] | None,
+    address_search: str | None,
+    limit: int,
+    offset: int,
+) -> tuple[list[IncidentOut], int]:
+    filters: list[str] = []
+    params: dict[str, Any] = {"limit": limit, "offset": offset}
+
+    if from_dispatched_at:
+        filters.append("dispatched_at >= %(from_dispatched_at)s")
+        params["from_dispatched_at"] = from_dispatched_at
+
+    if to_dispatched_at:
+        filters.append("dispatched_at <= %(to_dispatched_at)s")
+        params["to_dispatched_at"] = to_dispatched_at
+
+    if incident_type:
+        filters.append("incident_type = %(incident_type)s")
+        params["incident_type"] = incident_type
+
+    if channel:
+        filters.append("channel = %(channel)s")
+        params["channel"] = channel
+
+    if units:
+        filters.append("units && %(units)s")
+        params["units"] = units
+
+    if address_search:
+        filters.append("address ILIKE %(address_search)s")
+        params["address_search"] = f"%{address_search}%"
+
+    where_clause = f" WHERE {' AND '.join(filters)}" if filters else ""
+
+    sql_select = f"""
+    SELECT id, dispatched_at, special_call, units, channel, incident_type, address,
+           source_audio, original_text, transcript, parsed, created_at
+    FROM incidents{where_clause}
+    ORDER BY dispatched_at DESC
+    LIMIT %(limit)s OFFSET %(offset)s
+    """
+
+    sql_count = f"""
+    SELECT COUNT(*)
+    FROM incidents{where_clause}
+    """
+
+    async with pool.connection() as conn:
+        async with conn.cursor() as cur:
+            log.debug("Counting incidents with filters: %s", filters)
+            await cur.execute(sql_count, params)
+            count_row = await cur.fetchone()
+            total = count_row[0] if count_row else 0
+
+            log.debug("Selecting incidents with filters: %s", filters)
+            await cur.execute(sql_select, params)
+            rows = await cur.fetchall()
+            items = [
+                IncidentOut(
+                    id=row[0],
+                    dispatched_at=row[1],
+                    special_call=row[2],
+                    units=row[3],
+                    channel=row[4],
+                    incident_type=row[5],
+                    address=row[6],
+                    source_audio=row[7],
+                    original_text=row[8],
+                    transcript=row[9],
+                    parsed=row[10],
+                    created_at=row[11],
+                )
+                for row in rows
+            ]
+
+    return items, total
