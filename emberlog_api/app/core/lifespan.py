@@ -9,6 +9,7 @@ from emberlog_api.app.notifier.drain.drain import (
     Router,
     handle_incident_created,
 )
+from emberlog_api.app.notifier.notifier import NotifierClient
 
 
 @asynccontextmanager
@@ -17,11 +18,12 @@ async def lifespan(app: FastAPI):
     pool = build_pool()
     await pool.open(wait=True)
     app.state.pool = pool
+    nc = NotifierClient()
 
     # 2) build router (map event types -> handlers)
     router = Router(
         {
-            "incident.created": handle_incident_created,
+            "incident.created": nc.on_new_incident,
             # add more handlers here when ready
         }
     )
