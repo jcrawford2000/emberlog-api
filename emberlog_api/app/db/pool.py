@@ -1,10 +1,9 @@
 from fastapi import Request
 from psycopg_pool import AsyncConnectionPool
 
-from emberlog_api.app.core.settings import settings
-
-
 def build_pool() -> AsyncConnectionPool:
+    from emberlog_api.app.core.settings import settings
+
     return AsyncConnectionPool(
         settings.database_url,
         min_size=settings.pool_min_size,

@@ -1,5 +1,7 @@
 import logging
 import logging.config
+import os
+from copy import deepcopy
 
 from pythonjsonlogger import jsonlogger
 
@@ -48,5 +50,18 @@ LOGGING = {
 
 
 # emberlog_api.v1.routers.incidents
+def _file_logging_enabled() -> bool:
+    return os.getenv("EMBERLOG_ENABLE_FILE_LOGGING", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def configure_logging():
-    logging.config.dictConfig(LOGGING)
+    config = deepcopy(LOGGING)
+    if not _file_logging_enabled():
+        config["handlers"].pop("file_app", None)
+        config["loggers"][""]["handlers"] = ["console"]
+    logging.config.dictConfig(config)

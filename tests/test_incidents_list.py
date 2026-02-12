@@ -1,19 +1,7 @@
-import sys
-import os
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
-import httpx
 import pytest
 from fastapi import FastAPI
-
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-os.environ.setdefault("DATABASE_URL", "postgresql://localhost:5432/testdb")
-
-from emberlog_api.utils import loggersetup
-
-loggersetup.LOGGING["handlers"].pop("file_app", None)
-loggersetup.LOGGING["loggers"][""]["handlers"] = ["console"]
 
 from emberlog_api.app.db.pool import get_pool
 from emberlog_api.app.db.repositories import incidents as incidents_repo
@@ -133,17 +121,8 @@ def override_dependencies(monkeypatch):
 
 
 @pytest.fixture
-def anyio_backend():
-    return "asyncio"
-
-
-@pytest.fixture
-async def async_client():
-    transport = httpx.ASGITransport(app=incidents_app)
-    async with httpx.AsyncClient(
-        transport=transport, base_url="http://testserver", follow_redirects=True
-    ) as client:
-        yield client
+def app():
+    return incidents_app
 
 
 @pytest.mark.anyio
