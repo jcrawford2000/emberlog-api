@@ -33,8 +33,9 @@ Defined in `emberlog_api/app/core/settings.py` via `pydantic-settings`:
   - `DATABASE_URL` -> `database_url` (`emberlog_api/app/core/settings.py:9`)
 - Optional defaults:
   - `LOG_LEVEL=INFO` -> `log_level` (`emberlog_api/app/core/settings.py:10`)
-  - `POOL_MIN_SIZE=1` -> `pool_min_size` (`emberlog_api/app/core/settings.py:11`)
-  - `POOL_MAX_SIZE=5` -> `pool_max_size` (`emberlog_api/app/core/settings.py:12`)
+  - `ENABLE_FILE_LOGGING=false` -> `enable_file_logging` (`emberlog_api/app/core/settings.py:11`)
+  - `POOL_MIN_SIZE=1` -> `pool_min_size` (`emberlog_api/app/core/settings.py:12`)
+  - `POOL_MAX_SIZE=5` -> `pool_max_size` (`emberlog_api/app/core/settings.py:13`)
 - `.env` loading is enabled from repo root (`emberlog_api/app/core/settings.py:14-18`).
 
 ## Database / Migrations
@@ -69,7 +70,7 @@ Implemented endpoints:
 - Logging setup is in `emberlog_api/utils/loggersetup.py`.
 - Configured handlers:
   - console handler (`StreamHandler`)
-  - file handler at `/var/log/emberlog/emberlog_api.log`
+  - optional file handler at `/var/log/emberlog/emberlog_api.log` (enabled when `ENABLE_FILE_LOGGING=true`)
 - No metrics/tracing instrumentation found in-repo.
 
 ## Tests

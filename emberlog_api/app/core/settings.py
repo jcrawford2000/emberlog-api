@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 class Settings(BaseSettings):
     database_url: str
     log_level: str = "INFO"
+    enable_file_logging: bool = False
     pool_min_size: int = 1
     pool_max_size: int = 5
     notifier_base_url: str = "http://localhost:8090"
