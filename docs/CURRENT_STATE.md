@@ -46,14 +46,12 @@ Defined in `emberlog_api/app/core/settings.py` via `pydantic-settings`:
 
 ## API Surface (Current)
 Implemented endpoints:
+- `GET /healthz` (liveness probe) (`emberlog_api/app/main.py:42`)
+- `GET /readyz` (DB-backed readiness probe) (`emberlog_api/app/main.py:48`)
 - `GET /api/v1/incidents/` (paged/filterable list) (`emberlog_api/app/api/v1/routers/incidents.py:26`)
 - `GET /api/v1/incidents/{incident_id}` (`emberlog_api/app/api/v1/routers/incidents.py:56`)
 - `POST /api/v1/incidents/` (`emberlog_api/app/api/v1/routers/incidents.py:62`)
 - `GET /api/v1/sse/incidents` (`emberlog_api/app/api/v1/routers/sse.py:55`)
-
-Missing endpoints:
-- `GET /healthz` (not implemented)
-- `GET /readyz` (not implemented)
 
 ## Auth / Security (Current)
 - Auth enforcement: none found in API routers/dependencies.
