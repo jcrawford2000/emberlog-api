@@ -73,16 +73,17 @@ Implemented endpoints:
 - No metrics/tracing instrumentation found in-repo.
 
 ## Tests
-- Test directory currently contains `tests/test_incidents_list.py`.
+- Test directory currently contains:
+  - `tests/test_incidents_list.py`
+  - `tests/test_health_endpoints.py`
 - Pattern used:
   - overrides `get_pool` dependency (`tests/test_incidents_list.py:124`)
   - monkeypatches repository function (`tests/test_incidents_list.py:125`)
-  - exercises list endpoint filters/pagination via `TestClient`
+  - exercises route behavior with `httpx.AsyncClient` + `ASGITransport`
 - Current test run status in this environment:
-  - `pytest -q` fails during collection because `httpx` is missing from the active runtime environment, even though declared in `pyproject.toml`.
+  - `pytest -q` passes (10 tests).
 
 ## Known Gaps / Risks (Observed)
-- No health/readiness endpoints yet.
 - No in-repo Kubernetes manifests/charts or ArgoCD app config.
 - No documented v1.0 security posture (internal-only vs API-key model).
 - Notifier endpoint and CORS policy are hardcoded rather than settings-driven.
