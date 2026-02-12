@@ -10,11 +10,13 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     pool_min_size: int = 1
     pool_max_size: int = 5
+    notifier_base_url: str = "http://localhost:8090"
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        
     )
 
 
