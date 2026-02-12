@@ -25,7 +25,7 @@ dependencies = [
 packages = [{ include = "emberlog_api" }]
 
 [tool.poetry.scripts]
-emberlog-api = "emberlog-api.app.main:start"
+emberlog-api = "emberlog-api.app.main:app"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
