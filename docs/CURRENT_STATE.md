@@ -33,8 +33,9 @@ Defined in `emberlog_api/app/core/settings.py` via `pydantic-settings`:
   - `DATABASE_URL` -> `database_url` (`emberlog_api/app/core/settings.py:9`)
 - Optional defaults:
   - `LOG_LEVEL=INFO` -> `log_level` (`emberlog_api/app/core/settings.py:10`)
-  - `POOL_MIN_SIZE=1` -> `pool_min_size` (`emberlog_api/app/core/settings.py:11`)
-  - `POOL_MAX_SIZE=5` -> `pool_max_size` (`emberlog_api/app/core/settings.py:12`)
+  - `ENABLE_FILE_LOGGING=false` -> `enable_file_logging` (`emberlog_api/app/core/settings.py:11`)
+  - `POOL_MIN_SIZE=1` -> `pool_min_size` (`emberlog_api/app/core/settings.py:12`)
+  - `POOL_MAX_SIZE=5` -> `pool_max_size` (`emberlog_api/app/core/settings.py:13`)
 - `.env` loading is enabled from repo root (`emberlog_api/app/core/settings.py:14-18`).
 
 ## Database / Migrations
@@ -46,14 +47,12 @@ Defined in `emberlog_api/app/core/settings.py` via `pydantic-settings`:
 
 ## API Surface (Current)
 Implemented endpoints:
+- `GET /healthz` (liveness probe) (`emberlog_api/app/main.py:42`)
+- `GET /readyz` (DB-backed readiness probe) (`emberlog_api/app/main.py:48`)
 - `GET /api/v1/incidents/` (paged/filterable list) (`emberlog_api/app/api/v1/routers/incidents.py:26`)
 - `GET /api/v1/incidents/{incident_id}` (`emberlog_api/app/api/v1/routers/incidents.py:56`)
 - `POST /api/v1/incidents/` (`emberlog_api/app/api/v1/routers/incidents.py:62`)
 - `GET /api/v1/sse/incidents` (`emberlog_api/app/api/v1/routers/sse.py:55`)
-
-Missing endpoints:
-- `GET /healthz` (not implemented)
-- `GET /readyz` (not implemented)
 
 ## Auth / Security (Current)
 - Auth enforcement: none found in API routers/dependencies.
@@ -71,20 +70,21 @@ Missing endpoints:
 - Logging setup is in `emberlog_api/utils/loggersetup.py`.
 - Configured handlers:
   - console handler (`StreamHandler`)
-  - file handler at `/var/log/emberlog/emberlog_api.log`
+  - optional file handler at `/var/log/emberlog/emberlog_api.log` (enabled when `ENABLE_FILE_LOGGING=true`)
 - No metrics/tracing instrumentation found in-repo.
 
 ## Tests
-- Test directory currently contains `tests/test_incidents_list.py`.
+- Test directory currently contains:
+  - `tests/test_incidents_list.py`
+  - `tests/test_health_endpoints.py`
 - Pattern used:
   - overrides `get_pool` dependency (`tests/test_incidents_list.py:124`)
   - monkeypatches repository function (`tests/test_incidents_list.py:125`)
-  - exercises list endpoint filters/pagination via `TestClient`
+  - exercises route behavior with `httpx.AsyncClient` + `ASGITransport`
 - Current test run status in this environment:
-  - `pytest -q` fails during collection because `httpx` is missing from the active runtime environment, even though declared in `pyproject.toml`.
+  - `pytest -q` passes (10 tests).
 
 ## Known Gaps / Risks (Observed)
-- No health/readiness endpoints yet.
 - No in-repo Kubernetes manifests/charts or ArgoCD app config.
 - No documented v1.0 security posture (internal-only vs API-key model).
 - Notifier endpoint and CORS policy are hardcoded rather than settings-driven.

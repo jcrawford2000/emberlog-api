@@ -1,26 +1,16 @@
-import sys
-import os
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
-
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-os.environ.setdefault("DATABASE_URL", "postgresql://localhost:5432/testdb")
-
-from emberlog_api.utils import loggersetup
-
-loggersetup.LOGGING["handlers"].pop("file_app", None)
-loggersetup.LOGGING["loggers"][""]["handlers"] = ["console"]
+from fastapi import FastAPI
 
 from emberlog_api.app.db.pool import get_pool
 from emberlog_api.app.db.repositories import incidents as incidents_repo
-from emberlog_api.app.main import app
+from emberlog_api.app.api.v1.routers import incidents
 from emberlog_api.models.incident import IncidentOut
 
 
-client = TestClient(app)
+incidents_app = FastAPI()
+incidents_app.include_router(incidents.router, prefix="/api/v1")
 
 
 SAMPLE_INCIDENTS = [
@@ -121,14 +111,23 @@ async def fake_list_incidents(
 
 @pytest.fixture(autouse=True)
 def override_dependencies(monkeypatch):
-    app.dependency_overrides[get_pool] = lambda: None
+    async def override_pool():
+        return None
+
+    incidents_app.dependency_overrides[get_pool] = override_pool
     monkeypatch.setattr(incidents_repo, "list_incidents", fake_list_incidents)
     yield
-    app.dependency_overrides = {}
+    incidents_app.dependency_overrides = {}
 
 
-def test_list_incidents_default_pagination():
-    response = client.get("/api/v1/incidents")
+@pytest.fixture
+def app():
+    return incidents_app
+
+
+@pytest.mark.anyio
+async def test_list_incidents_default_pagination(async_client):
+    response = await async_client.get("/api/v1/incidents")
     assert response.status_code == 200
     payload = response.json()
     assert payload["page"] == 1
@@ -137,26 +136,31 @@ def test_list_incidents_default_pagination():
     assert [item["id"] for item in payload["items"]] == [3, 2, 1]
 
 
-def test_filter_by_incident_type():
-    response = client.get("/api/v1/incidents", params={"incident_type": "medical"})
+@pytest.mark.anyio
+async def test_filter_by_incident_type(async_client):
+    response = await async_client.get(
+        "/api/v1/incidents", params={"incident_type": "medical"}
+    )
     assert response.status_code == 200
     payload = response.json()
     assert payload["total"] == 1
     assert payload["items"][0]["id"] == 2
 
 
-def test_filter_by_channel():
-    response = client.get("/api/v1/incidents", params={"channel": "A1"})
+@pytest.mark.anyio
+async def test_filter_by_channel(async_client):
+    response = await async_client.get("/api/v1/incidents", params={"channel": "A1"})
     assert response.status_code == 200
     payload = response.json()
     assert payload["total"] == 2
     assert [item["id"] for item in payload["items"]] == [3, 1]
 
 
-def test_filter_by_date_range():
+@pytest.mark.anyio
+async def test_filter_by_date_range(async_client):
     start = datetime(2024, 5, 2, tzinfo=timezone.utc)
     end = start + timedelta(days=1, hours=12)
-    response = client.get(
+    response = await async_client.get(
         "/api/v1/incidents",
         params={
             "from_dispatched_at": start.isoformat(),
@@ -169,8 +173,9 @@ def test_filter_by_date_range():
     assert [item["id"] for item in payload["items"]] == [3, 2]
 
 
-def test_filter_by_units():
-    response = client.get(
+@pytest.mark.anyio
+async def test_filter_by_units(async_client):
+    response = await async_client.get(
         "/api/v1/incidents",
         params=[("units", "E1"), ("units", "X9")],
     )
@@ -180,16 +185,22 @@ def test_filter_by_units():
     assert payload["items"][0]["id"] == 1
 
 
-def test_filter_by_address_search():
-    response = client.get("/api/v1/incidents", params={"address_search": "Pine"})
+@pytest.mark.anyio
+async def test_filter_by_address_search(async_client):
+    response = await async_client.get(
+        "/api/v1/incidents", params={"address_search": "Pine"}
+    )
     assert response.status_code == 200
     payload = response.json()
     assert payload["total"] == 1
     assert payload["items"][0]["id"] == 2
 
 
-def test_pagination_parameters():
-    response = client.get("/api/v1/incidents", params={"page": 2, "page_size": 1})
+@pytest.mark.anyio
+async def test_pagination_parameters(async_client):
+    response = await async_client.get(
+        "/api/v1/incidents", params={"page": 2, "page_size": 1}
+    )
     assert response.status_code == 200
     payload = response.json()
     assert payload["page"] == 2

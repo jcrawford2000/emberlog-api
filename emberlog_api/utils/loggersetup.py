@@ -1,7 +1,9 @@
 import logging
 import logging.config
+from copy import deepcopy
 
 from pythonjsonlogger import jsonlogger
+from emberlog_api.app.core.settings import settings
 
 LOGGING = {
     "version": 1,
@@ -47,6 +49,9 @@ LOGGING = {
 }
 
 
-# emberlog_api.v1.routers.incidents
 def configure_logging():
-    logging.config.dictConfig(LOGGING)
+    config = deepcopy(LOGGING)
+    if not settings.enable_file_logging:
+        config["handlers"].pop("file_app", None)
+        config["loggers"][""]["handlers"] = ["console"]
+    logging.config.dictConfig(config)
