@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any, Dict
+from emberlog_api.app.core.settings import settings
 
 import httpx
 
@@ -11,7 +12,7 @@ log = logging.getLogger("emberlog_api.notifier.client")
 class NotifierClient:
     def __init__(self):
         self._client = httpx.AsyncClient(
-            base_url="http://localhost:8090",
+            base_url=settings.notifier_base_url,
             headers={
                 "Accept": "application/json",
                 "Content-Type": "application/json",
@@ -35,5 +36,3 @@ class NotifierClient:
         data = r.json()
         log.debug("Result: %s", data)
 
-
-# async def handle_new_incident(event_type: str, payload: Dict[str, Any]) -> None:
