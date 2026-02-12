@@ -84,9 +84,11 @@ Agents must assume:
 
 Use parameterized SQL with psycopg.
 Never interpolate raw strings.
+Current DB stack in this repo is psycopg3 + psycopg_pool (`AsyncConnectionPool`), not asyncpg pools.
 
 All schema changes must live under:
 emberlog_api/migrations/
+Migrations are maintained as versioned SQL files in this directory (no Alembic config is currently present in-repo).
 
 For new tables or major schema changes:
 Open a separate PR unless explicitly instructed.
@@ -206,6 +208,7 @@ New external integrations:
 - Must use httpx.AsyncClient.
 - Must be configurable via Settings.
 - Must not be hardcoded.
+Current implementation note: `emberlog_api/app/notifier/notifier.py` currently hardcodes a localhost base URL; treat this as technical debt and do not replicate this pattern in new code.
 
 Do NOT modify:
 - Outbox table schema
