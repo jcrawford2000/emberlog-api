@@ -32,7 +32,6 @@ Status (repo scan on 2026-02-12): implemented with `DATABASE_URL` via pydantic-s
 - Provide readiness endpoint:
   - `GET /readyz` → 200 OK only when app is ready
   - Readiness SHOULD validate DB connectivity (simple `SELECT 1`) unless too costly.
-Status (repo scan on 2026-02-12): missing; no `/healthz` or `/readyz` routes currently exist.
 
 ### R4 — Structured logging
 - Log to stdout/stderr.
@@ -49,7 +48,7 @@ Status (repo scan on 2026-02-12): partial; logging is configured, but request lo
 - Config MUST be controllable via env vars (12-factor).
 - Include a single authoritative config module (e.g., Pydantic settings).
 - Provide documented defaults where safe.
-Status (repo scan on 2026-02-12): partial; central settings module exists, but some runtime values remain hardcoded (for example notifier base URL and CORS policy).
+
 
 ### R6 — Minimal security posture
 One of:
@@ -74,19 +73,16 @@ K8S resources MUST include:
 - Secret references for sensitive config
 - Resource requests/limits (reasonable defaults)
 - Liveness/readiness probes wired to `/healthz` and `/readyz`
-Status (repo scan on 2026-02-12): not satisfied; Kubernetes manifests/charts are not present in this repository.
 
 ### R8 — ArgoCD integration
 - Repo MUST include an ArgoCD Application definition or a standard path consumable by your existing “app of apps” structure.
 - Path MUST be documented in README.
-Status (repo scan on 2026-02-12): not satisfied; no ArgoCD manifests/path are present and README does not document one.
 
 ### R9 — Test + verification
 - Provide at least:
   - unit test smoke coverage for health endpoints
   - minimal DB connectivity test (optional but recommended)
 - Provide `DEMO_TEST_PLAN.md` (or README section) to validate end-to-end behavior.
-Status (repo scan on 2026-02-12): partial; tests exist for incident listing, but no health endpoint tests, no DB connectivity verification test, and no demo test plan doc/section were found.
 
 
 ## Out of Scope (v1.0)
