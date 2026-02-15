@@ -8,7 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 class Settings(BaseSettings):
     database_url: str
     log_level: str = "INFO"
+    log_format: str = "auto"
     enable_file_logging: bool = False
+    log_payload_preview: bool = False
+    log_payload_max_chars: int = 256
     emberlog_api_key: str = ""
     emberlog_env: str = "prod"
     pool_min_size: int = 1

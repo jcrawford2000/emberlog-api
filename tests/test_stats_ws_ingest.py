@@ -1,4 +1,5 @@
 import asyncio
+from types import SimpleNamespace
 
 import pytest
 from fastapi import FastAPI
@@ -17,6 +18,9 @@ class ControlledWebSocket:
     def __init__(self) -> None:
         self.accepted = False
         self._queue: asyncio.Queue[object] = asyncio.Queue()
+        self.client = SimpleNamespace(host="127.0.0.1")
+        self.url = SimpleNamespace(path="/api/v1/stats/trunkrecorder/ws")
+        self.headers = {"x-api-key": "test", "authorization": "Bearer secret"}
 
     async def accept(self) -> None:
         self.accepted = True

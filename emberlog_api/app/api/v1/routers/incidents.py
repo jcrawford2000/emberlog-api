@@ -15,9 +15,7 @@ from emberlog_api.models.incident import (
     LinkTarget,
     NewIncident,
 )
-from emberlog_api.utils.loggersetup import configure_logging
 
-configure_logging()
 log = logging.getLogger("emberlog_api.v1.routers.incidents")
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
@@ -36,6 +34,7 @@ async def list_incidents(
     page_size: int = Query(50, ge=1, le=200),
     pool: AsyncConnectionPool = Depends(get_pool),
 ):
+    log.info("incidents_list_requested page=%s page_size=%s", page, page_size)
     limit = page_size
     offset = (page - 1) * page_size
     items, total = await incidents.list_incidents(
@@ -50,12 +49,21 @@ async def list_incidents(
         offset=offset,
     )
 
+    log.info(
+        "incidents_list_completed page=%s page_size=%s returned=%s total=%s",
+        page,
+        page_size,
+        len(items),
+        total,
+    )
     return IncidentListOut(items=items, total=total, page=page, page_size=page_size)
 
 
 @router.get("/{incident_id}", name="get_incident", response_model=IncidentOut)
 async def get_incident(incident_id: int, pool: AsyncConnectionPool = Depends(get_pool)):
+    log.info("incident_get_requested incident_id=%s", incident_id)
     resp = await incidents.select_incident(pool=pool, incident_id=incident_id)
+    log.info("incident_get_completed incident_id=%s", incident_id)
     return resp
 
 
@@ -68,11 +76,12 @@ async def get_incident(incident_id: int, pool: AsyncConnectionPool = Depends(get
 async def create_incident(
     request: Request, payload: IncidentIn, pool: AsyncConnectionPool = Depends(get_pool)
 ):
+    log.info("incident_create_requested")
     resp = await incidents.insert_incident(pool=pool, payload=payload)
     resp_id = resp["id"]
     resp_created_at = resp["created_at"]
     location = request.url_for("get_incident", incident_id=resp_id)
-    log.debug(f"Inserted incident with id {resp_id}: {location}")
+    log.info("incident_create_inserted incident_id=%s location=%s", resp_id, location)
     links = Links(self=LinkTarget(_url=str(location)))
     new_incident = NewIncident(id=resp_id, created_at=resp_created_at, links=links)
     incident = IncidentOut(
@@ -91,5 +100,5 @@ async def create_incident(
     )
     await publish_incident(incident)
 
-    log.debug("Published to SSE")
+    log.info("incident_create_published_sse incident_id=%s", resp_id)
     return NewIncident(id=resp_id, created_at=resp_created_at, links=links)

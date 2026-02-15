@@ -51,6 +51,14 @@ async def test_healthz_returns_ok(async_client):
     response = await async_client.get("/healthz")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+    assert response.headers.get("X-Request-ID")
+
+
+@pytest.mark.anyio
+async def test_healthz_propagates_request_id(async_client):
+    response = await async_client.get("/healthz", headers={"X-Request-ID": "req-123"})
+    assert response.status_code == 200
+    assert response.headers.get("X-Request-ID") == "req-123"
 
 
 @pytest.mark.anyio

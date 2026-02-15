@@ -2,12 +2,22 @@
 
 import json
 import logging
+from dataclasses import dataclass
 
 from emberlog_api.app.stats import store
 
 
 log = logging.getLogger("emberlog_api.stats.ingest")
 DEFAULT_SOURCE_ID = "trunkrecorder-default"
+
+
+@dataclass(slots=True)
+class StatsWsMessageMeta:
+    """Parsed metadata for one Trunk Recorder websocket message."""
+
+    source_id: str
+    message_type: str
+    instance_key: str
 
 
 def resolve_source_id(payload: dict[str, object]) -> str:
@@ -21,10 +31,9 @@ def resolve_source_id(payload: dict[str, object]) -> str:
 def handle_stats_ws_connected(source_id: str) -> None:
     """Track and log source connection events."""
     store.mark_source_connected(source_id=source_id)
-    log.info("stats_ws_connected source_id=%s", source_id)
 
 
-def handle_stats_ws_message(message_text: str) -> str | None:
+def handle_stats_ws_message(message_text: str) -> StatsWsMessageMeta | None:
     """Parse one WS text frame and update minimal source status for valid JSON."""
     try:
         payload = json.loads(message_text)
@@ -42,26 +51,16 @@ def handle_stats_ws_message(message_text: str) -> str | None:
     instance_key = payload.get("instanceKey")
     instance_key_value = instance_key if isinstance(instance_key, str) else ""
 
-    log.info(
-        "stats_ws_message_received type=%s source_id=%s instance_key=%s",
-        type_value,
-        source_id,
-        instance_key_value,
-    )
     store.mark_source_seen(source_id=source_id)
-    return source_id
+    return StatsWsMessageMeta(
+        source_id=source_id,
+        message_type=type_value,
+        instance_key=instance_key_value,
+    )
 
 
 def handle_stats_ws_disconnected(
     source_id: str,
-    close_code: int | None = None,
-    close_reason: str | None = None,
 ) -> None:
     """Track and log source disconnection events."""
     store.mark_source_disconnected(source_id=source_id)
-    log.info(
-        "stats_ws_disconnected source_id=%s close_code=%s close_reason=%s",
-        source_id,
-        close_code,
-        close_reason or "",
-    )
