@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     database_url: str
     log_level: str = "INFO"
     enable_file_logging: bool = False
+    emberlog_api_key: str = ""
+    emberlog_env: str = "prod"
     pool_min_size: int = 1
     pool_max_size: int = 5
     notifier_base_url: str = "http://localhost:8090"
