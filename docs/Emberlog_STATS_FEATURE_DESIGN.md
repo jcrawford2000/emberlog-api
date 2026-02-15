@@ -270,5 +270,14 @@ Hardening, schema cleanup, documentation updates.
     - `source_status: null`
     - `systems: []`
     - `latest_decode: {}`
+- Story 2 delivered (API key auth for stats routes).
+  - Header: `X-API-Key`
+  - Env vars:
+    - `EMBERLOG_API_KEY` (expected API key)
+    - `EMBERLOG_ENV` (`dev|prod`, default `prod`)
+  - Behavior:
+    - If `EMBERLOG_API_KEY` is set, all `/api/v1/stats/*` routes require matching `X-API-Key`.
+    - If `EMBERLOG_API_KEY` is empty and `EMBERLOG_ENV=dev`, stats routes are allowed without header.
+    - If `EMBERLOG_API_KEY` is empty and `EMBERLOG_ENV=prod`, stats routes return `401 Unauthorized`.
 - Alerting/thresholds
 - Recorder health dashboards
