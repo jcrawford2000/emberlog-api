@@ -1,0 +1,2 @@
+"""Stats feature module scaffolding."""
+
