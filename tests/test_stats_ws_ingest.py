@@ -7,6 +7,7 @@ from fastapi.websockets import WebSocketDisconnect
 
 from emberlog_api.app.core.settings import settings
 from emberlog_api.app.stats import routes as stats_routes
+from emberlog_api.utils.loggersetup import configure_logging
 
 
 _DISCONNECT = object()
@@ -106,3 +107,30 @@ async def test_stats_ws_ingest_ignores_invalid_json_and_stays_open(async_client,
 
     await websocket.disconnect()
     await ws_task
+
+
+@pytest.mark.anyio
+async def test_stats_ws_ingest_logs_full_payload_when_enabled(
+    async_client, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(settings, "emberlog_api_key", "devkey")
+    monkeypatch.setattr(settings, "emberlog_env", "prod")
+    monkeypatch.setattr(settings, "ws_payload_log_enabled", True)
+    payload_log_path = tmp_path / "ws-payload.log"
+    monkeypatch.setattr(settings, "ws_payload_log_path", str(payload_log_path))
+    configure_logging()
+
+    websocket = ControlledWebSocket()
+    ws_task = asyncio.create_task(stats_routes.stats_trunkrecorder_ws(websocket=websocket))
+
+    while not websocket.accepted:
+        await asyncio.sleep(0)
+
+    await websocket.push_text('{"type":"rates","instanceId":"tr-a"}')
+    await asyncio.sleep(0)
+    await websocket.disconnect()
+    await ws_task
+
+    log_content = payload_log_path.read_text(encoding="utf-8")
+    assert "payload=" in log_content
+    assert "instanceId" in log_content

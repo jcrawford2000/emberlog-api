@@ -14,6 +14,12 @@ This service uses stdlib logging with environment-controlled formatting and corr
 - `LOG_PAYLOAD_MAX_CHARS`:
   - max preview length for websocket payloads
   - default `256`
+- `WS_PAYLOAD_LOG_ENABLED`:
+  - `false` (default)
+  - when `true`, every websocket text-frame payload received on stats ingest is logged to a file
+- `WS_PAYLOAD_LOG_PATH`:
+  - destination file path for websocket payload logs
+  - default `/tmp/emberlog-ws-payload.log`
 
 ## Correlation IDs
 
@@ -34,6 +40,18 @@ For `WS /api/v1/stats/trunkrecorder/ws`, lifecycle logs include:
 
 Payloads are not logged by default.
 
+### Optional Full Payload File Logging
+
+Set the following in `.env` to enable full websocket payload logging to file:
+
+```env
+WS_PAYLOAD_LOG_ENABLED=true
+WS_PAYLOAD_LOG_PATH=/var/log/emberlog/trunkrecorder-ws-payload.log
+```
+
+When enabled, each received websocket text frame is appended as a structured log line
+to the configured file path (including correlation fields like `conn_id`).
+
 ## Manual Verification
 
 HTTP:
@@ -48,4 +66,10 @@ Websocket:
 ```bash
 websocat -v ws://localhost:8000/api/v1/stats/trunkrecorder/ws
 {"type":"rates","instanceId":"trunkrecorder-default"}
+```
+
+Verify payload file logging:
+
+```bash
+tail -f /var/log/emberlog/trunkrecorder-ws-payload.log
 ```

@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     enable_file_logging: bool = False
     log_payload_preview: bool = False
     log_payload_max_chars: int = 256
+    ws_payload_log_enabled: bool = False
+    ws_payload_log_path: str = "/tmp/emberlog-ws-payload.log"
     emberlog_api_key: str = ""
     emberlog_env: str = "prod"
     pool_min_size: int = 1

@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
+from emberlog_api.app.core.settings import settings
 from emberlog_api.app.stats.auth import require_stats_api_key
 from emberlog_api.app.stats.ingest import (
     DEFAULT_SOURCE_ID,
@@ -20,6 +21,7 @@ from emberlog_api.utils.log_safety import payload_preview, redact_headers
 
 
 log = logging.getLogger("emberlog_api.stats.routes")
+ws_payload_log = logging.getLogger("emberlog_api.stats.ws_payload")
 router = APIRouter(prefix="/stats", tags=["stats"])
 
 
@@ -53,6 +55,14 @@ async def stats_trunkrecorder_ws(websocket: WebSocket) -> None:
     try:
         while True:
             message_text = await websocket.receive_text()
+            if settings.ws_payload_log_enabled:
+                ws_payload_log.info(
+                    "ws_payload path=%s source_id=%s size_bytes=%s payload=%s",
+                    websocket.url.path,
+                    current_source_id,
+                    len(message_text.encode("utf-8")),
+                    message_text,
+                )
             meta = handle_stats_ws_message(message_text=message_text)
             if meta is not None:
                 current_source_id = meta.source_id

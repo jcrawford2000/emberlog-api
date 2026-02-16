@@ -1,6 +1,7 @@
 import logging
 import logging.config
 from copy import deepcopy
+from pathlib import Path
 
 from emberlog_api.app.core.settings import settings
 
@@ -65,4 +66,42 @@ def configure_logging():
     if not settings.enable_file_logging:
         config["handlers"].pop("file_app", None)
         config["loggers"][""]["handlers"] = ["console"]
+    elif not _ensure_log_file_parent(config["handlers"]["file_app"]["filename"]):
+        config["handlers"].pop("file_app", None)
+        config["loggers"][""]["handlers"] = ["console"]
+
+    if settings.ws_payload_log_enabled:
+        ws_payload_log_path = Path(settings.ws_payload_log_path).expanduser()
+        if _ensure_log_file_parent(ws_payload_log_path):
+            config["handlers"]["ws_payload_file"] = {
+                "class": "logging.FileHandler",
+                "level": "INFO",
+                "filename": str(ws_payload_log_path),
+                "formatter": "json",
+                "filters": ["class_method", "logger_id", "request_context"],
+            }
+            config["loggers"]["emberlog_api.stats.ws_payload"] = {
+                "level": "INFO",
+                "handlers": ["ws_payload_file"],
+                "propagate": False,
+            }
+        else:
+            config["loggers"]["emberlog_api.stats.ws_payload"] = {
+                "level": "INFO",
+                "handlers": [],
+                "propagate": False,
+            }
+
     logging.config.dictConfig(config)
+
+
+def _ensure_log_file_parent(path_value: str | Path) -> bool:
+    """Ensure log path parent exists and is writable."""
+    try:
+        path = Path(path_value).expanduser()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8"):
+            pass
+        return True
+    except OSError:
+        return False
