@@ -276,15 +276,8 @@ Hardening, schema cleanup, documentation updates.
     - `EMBERLOG_API_KEY` (expected API key)
     - `EMBERLOG_ENV` (`dev|prod`, default `prod`)
   - Behavior:
-    - If `EMBERLOG_API_KEY` is set, stats REST routes require matching `X-API-Key`.
+    - If `EMBERLOG_API_KEY` is set, all `/api/v1/stats/*` routes require matching `X-API-Key`.
     - If `EMBERLOG_API_KEY` is empty and `EMBERLOG_ENV=dev`, stats routes are allowed without header.
     - If `EMBERLOG_API_KEY` is empty and `EMBERLOG_ENV=prod`, stats routes return `401 Unauthorized`.
-- Story 3 delivered (TR WebSocket ingest log-only + in-memory source status).
-  - Endpoint: `WS /api/v1/stats/trunkrecorder/ws`
-  - Trust model: internal-only ingest (no API key required on this WS endpoint).
-  - Behavior:
-    - Accepts TR WS text frames and logs message type + minimal metadata.
-    - Invalid JSON is logged and ignored (connection remains open).
-    - Source status updates in-process only (`connected`, `last_seen`) and is exposed via `GET /api/v1/stats/systems`.
 - Alerting/thresholds
 - Recorder health dashboards
