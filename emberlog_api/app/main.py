@@ -8,7 +8,6 @@ from psycopg_pool import AsyncConnectionPool
 from emberlog_api.app.api.v1.routers import incidents, sse
 from emberlog_api.app.db.pool import get_pool
 from emberlog_api.app.core.lifespan import lifespan
-from emberlog_api.app.stats import routes as stats_routes
 from emberlog_api.utils.loggersetup import configure_logging
 
 
@@ -25,7 +24,6 @@ app.add_middleware(
 
 app.include_router(incidents.router, prefix="/api/v1")
 app.include_router(sse.router, prefix="/api/v1")
-app.include_router(stats_routes.router, prefix="/api/v1")
 
 
 async def check_db_connectivity(pool: AsyncConnectionPool) -> bool:

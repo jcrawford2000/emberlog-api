@@ -258,17 +258,5 @@ Hardening, schema cleanup, documentation updates.
 
 - Redis-backed store
 - Multi-replica support
-
----
-
-## Implementation Status
-
-- Story 1 delivered (module skeleton + route wiring).
-- Placeholder endpoint available:
-  - `GET /api/v1/stats/systems`
-  - Returns `200` with a scaffold payload:
-    - `source_status: null`
-    - `systems: []`
-    - `latest_decode: {}`
 - Alerting/thresholds
 - Recorder health dashboards
