@@ -13,11 +13,6 @@ from emberlog_api.app.db.repositories import traffic as traffic_repo
 
 log = logging.getLogger("emberlog_api.services.mqtt_consumer")
 
-RATES_TOPIC_SUFFIX = "rates"
-RECORDERS_TOPIC_SUFFIX = "recorders"
-CALLS_ACTIVE_TOPIC_SUFFIX = "calls_active"
-
-
 def _topic(topic_suffix: str) -> str:
     return f"{settings.mqtt_topic_prefix}/{topic_suffix}"
 
@@ -27,7 +22,8 @@ def _updated_at_from_timestamp(timestamp: Any) -> datetime:
 
 
 def _decode_rate_pct(decoderate: float) -> float:
-    return decoderate * 100.0 if decoderate <= 1.0 else decoderate
+    decode_pct = (decoderate / settings.max_decoderate) * 100.0 if settings.max_decoderate > 1.0 else decoderate
+    return decode_pct
 
 
 async def handle_rates_message(pool: AsyncConnectionPool, payload: dict[str, Any]) -> None:
@@ -182,15 +178,15 @@ async def process_mqtt_message(
         return
 
     try:
-        if topic == _topic(RATES_TOPIC_SUFFIX):
+        if topic == _topic(settings.rates_topic_suffix):
             await handle_rates_message(pool, payload)
             return
 
-        if topic == _topic(RECORDERS_TOPIC_SUFFIX):
+        if topic == _topic(settings.recorders_topic_suffix):
             await handle_recorders_message(pool, payload)
             return
 
-        if topic == _topic(CALLS_ACTIVE_TOPIC_SUFFIX):
+        if topic == _topic(settings.calls_active_topic_suffix):
             await handle_calls_active_message(pool, payload)
             return
 
@@ -212,9 +208,9 @@ async def start_mqtt_consumer(pool: AsyncConnectionPool) -> None:
     reconnect_delay_s = 1.0
     max_reconnect_delay_s = 60.0
     topics = [
-        _topic(RATES_TOPIC_SUFFIX),
-        _topic(RECORDERS_TOPIC_SUFFIX),
-        _topic(CALLS_ACTIVE_TOPIC_SUFFIX),
+        _topic(settings.rates_topic_suffix),
+        _topic(settings.recorders_topic_suffix),
+        _topic(settings.calls_active_topic_suffix),
     ]
 
     while True:

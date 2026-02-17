@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     mqtt_username: str | None = None
     mqtt_password: str | None = None
 
+    max_decoderate: float = 40.0
+    rates_topic_suffix: str = "rates"
+    recorders_topic_suffix: str = "recorders"
+    calls_active_topic_suffix: str = "calls_active"
+
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
