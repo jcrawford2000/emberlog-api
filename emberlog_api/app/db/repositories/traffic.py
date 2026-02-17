@@ -1,5 +1,7 @@
 from datetime import datetime
+from typing import Any
 
+from psycopg.rows import dict_row
 from psycopg.types.json import Json
 from psycopg_pool import AsyncConnectionPool
 
@@ -159,3 +161,80 @@ async def upsert_calls_active_snapshot(
     async with pool.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(SQL_UPSERT_CALLS_ACTIVE_SNAPSHOT, params)
+
+SQL_LIST_DECODE_RATE_LATEST = """
+SELECT
+    sys_num,
+    sys_name,
+    decoderate_pct,
+    decoderate_interval_s,
+    control_channel_hz,
+    updated_at
+FROM tr_decode_rate_latest
+WHERE instance_id = %(instance_id)s
+"""
+
+SQL_SELECT_RECORDERS_SNAPSHOT_LATEST = """
+SELECT
+    total_count,
+    recording_count,
+    idle_count,
+    available_count,
+    updated_at
+FROM tr_recorders_snapshot_latest
+WHERE instance_id = %(instance_id)s
+"""
+
+SQL_SELECT_CALLS_ACTIVE_SNAPSHOT_LATEST = """
+SELECT
+    calls_json,
+    active_calls_count,
+    updated_at
+FROM tr_calls_active_snapshot_latest
+WHERE instance_id = %(instance_id)s
+"""
+
+
+async def list_decode_rate_latest(
+    pool: AsyncConnectionPool,
+    *,
+    instance_id: str,
+) -> list[dict[str, Any]]:
+    """List latest decode-rate rows for one instance."""
+    params = {"instance_id": instance_id}
+
+    async with pool.connection() as conn:
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(SQL_LIST_DECODE_RATE_LATEST, params)
+            rows = await cur.fetchall()
+            return list(rows)
+
+
+async def select_recorders_snapshot_latest(
+    pool: AsyncConnectionPool,
+    *,
+    instance_id: str,
+) -> dict[str, Any] | None:
+    """Select latest recorders snapshot for one instance."""
+    params = {"instance_id": instance_id}
+
+    async with pool.connection() as conn:
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(SQL_SELECT_RECORDERS_SNAPSHOT_LATEST, params)
+            row = await cur.fetchone()
+            return dict(row) if row else None
+
+
+async def select_calls_active_snapshot_latest(
+    pool: AsyncConnectionPool,
+    *,
+    instance_id: str,
+) -> dict[str, Any] | None:
+    """Select latest active-calls snapshot for one instance."""
+    params = {"instance_id": instance_id}
+
+    async with pool.connection() as conn:
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(SQL_SELECT_CALLS_ACTIVE_SNAPSHOT_LATEST, params)
+            row = await cur.fetchone()
+            return dict(row) if row else None
