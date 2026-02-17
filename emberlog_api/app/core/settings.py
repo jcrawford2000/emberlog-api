@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     pool_min_size: int = 1
     pool_max_size: int = 5
     notifier_base_url: str = "http://localhost:8090"
-    mqtt_host: str = "mosquitto-emberlog.pi-rack.com"
+    mqtt_host: str = "mosquitto.pi-rack.com"
     mqtt_port: int = 1883
     mqtt_topic_prefix: str = "emberlog/trunkrecorder"
     mqtt_username: str | None = None
